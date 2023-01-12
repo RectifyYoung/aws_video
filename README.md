@@ -1,3 +1,6 @@
+# 2023-01-12
+## rekognition_all_stages.py
+Use our own S3. Pull out Summary.pickle.
 # 2020-08-05
 ## rekognition_all_stages.py
 Now single entry point to run rekognition stages.
