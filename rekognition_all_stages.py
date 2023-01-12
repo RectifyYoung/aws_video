@@ -451,7 +451,7 @@ def run_machine_learning(bucket, experimentfilters, outpth, colorscheme=None, po
     # Load summary file
     allpred = []
     for spind, sp in enumerate(experimentfilters):
-        fn = s3tools.getpath({'S3Bucket': bucket, 'S3ObjectName': os.path.join(sp, 'summary.pickle')})
+        fn = s3tools.getpath({'S3Bucket': bucket, 'S3ObjectName': os.path.join(sp, 'summary.pickle')}) #pickle file is downloaded through this function
         with open(fn, 'rb') as f:
             obj = pickle.load(f)
 
@@ -533,7 +533,7 @@ def run_machine_learning(bucket, experimentfilters, outpth, colorscheme=None, po
                 bb = testsubj['df'][
                     ['BoundingBoxLeft', 'BoundingBoxTop', 'BoundingBoxWidth', 'BoundingBoxHeight']].mean()
                 ax.add_patch(mpatches.Rectangle((bb[0], bb[1] - bb[3]), bb[2], bb[3],
-                                                edgecolor=(1 - proponeface, proponeface, 0), Fill=False))
+                                                edgecolor=(1 - proponeface, proponeface, 0), fill=False))
                 # print(mldf.describe())
 
             plt.figure("ROC")
@@ -651,10 +651,12 @@ def inter_rater_reliability(bucket, experimentfilter, mldf, pred, outpth, Qualit
 
 
 if __name__ == '__main__':
-    bucket = 'infantrekognition'
+    #bucket = 'infantrekognition'
+    bucket = 'gazecodingtestyang' #change bucket to my own s3 bucket
     usemedianforcentering=True
 
-    for task in ['looking-or-not', 'preference-looking']:
+    #for task in ['looking-or-not', 'preference-looking']:
+    for task in ['preference-looking']:#Only need prefernece-looking in this task
 
         prs = {}
 
@@ -702,13 +704,14 @@ if __name__ == '__main__':
             colorscheme = ['tab:red', 'tab:purple']
 
             # For figures and summaries
-            outpth = '/imaging/rcusack/Dropbox/python/aws_video/figures_preflooking'
+            outpth = r'D:\aws_video-master\results' #change output path to my own path
             if usemedianforcentering:
                 outpth=outpth+'_median'
             if not os.path.exists(outpth):
                 os.mkdir(outpth)
 
-            experimentfilters = ['osf/dqmcv/osfstorage/novelverbs', 'osf/tqgkc/osfstorage/novelverbs']
+            #experimentfilters = ['osf/dqmcv/osfstorage/novelverbs', 'osf/tqgkc/osfstorage/novelverbs']
+            experimentfilters = ['training/summary/'] #change filters to my own filter
 
             # Tell Rekognition to process them
             #        for experimentfilter in experimentfilters:
@@ -726,9 +729,14 @@ if __name__ == '__main__':
             #    prs[experimentfilter] = post_rekognition_summary(bucket, 'coding/' + experimentfilter)
 
             # Run leave-one-out machine learning
-            mlres = run_machine_learning(bucket, ['coding_summary/coding/' + experimentfilter for experimentfilter in
+            # mlres = run_machine_learning(bucket, ['coding_summary/coding/' + experimentfilter for experimentfilter in
+            #                                       experimentfilters], outpth, possible_codes=[-1, 1],
+            # colorscheme=colorscheme, usemedianforcentering=usemedianforcentering)
+            mlres = run_machine_learning(bucket, [experimentfilter for experimentfilter in
                                                   experimentfilters], outpth, possible_codes=[-1, 1],
-            colorscheme=colorscheme, usemedianforcentering=usemedianforcentering)
+            colorscheme=colorscheme, usemedianforcentering=usemedianforcentering) #use my own filter
+
+        #The rest seems to be used to draw results, not necessary for this task?
 
         # Histograms of age ranges of faces detected
         if prs:
@@ -742,7 +750,8 @@ if __name__ == '__main__':
             # I'm sure there's a more elegant way to do this grouping
             groups=mlres['allmldf']['proponeface'].groupby(mlres['allmldf']['spind'])
             fig = plt.figure("proponeface")
-            plt.hist([list(x[1]) for x in groups], stacked=True, color=colorscheme, bins=np.linspace(0, 1, 10))
+            #plt.hist([list(x[1]) for x in groups], stacked=True, color=colorscheme, bins=np.linspace(0, 1, 10))
+            plt.hist([list(x[1]) for x in groups], stacked=True, color='tab:red', bins=np.linspace(0, 1, 10))
             plt.xlabel('Proportion one face')
             plt.ylabel('Number of videos')
             fig.savefig(os.path.join(outpth, 'proponeface_stacked.pdf'), format='pdf')
